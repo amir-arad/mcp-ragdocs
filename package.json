@@ -1,6 +1,6 @@
 {
   "name": "@amir-arad/mcp-ragdocs",
-  "version": "1.0.0-dev.20250322120440-dev.20250322122102-dev.20250322122635-dev.20250322124756-dev.20250322131330-dev.20250322152518",
+  "version": "1.0.0-dev.20250322120440-dev.20250322122102-dev.20250322122635-dev.20250322124756-dev.20250322131330-dev.20250322152800",
   "description": "An MCP server with HTTP/SSE transport for semantic documentation search and retrieval using vector databases to augment LLM capabilities.",
   "private": false,
   "type": "module",
