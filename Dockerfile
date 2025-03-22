@@ -44,6 +44,13 @@ RUN npm run build
 # Stage 2: Production image
 FROM node:20-bullseye
 
+# Metadata labels
+LABEL org.opencontainers.image.title="MCP RAG Documentation Server"
+LABEL org.opencontainers.image.description="A containerized MCP server implementation with HTTP/SSE transport for retrieving and processing documentation through vector search"
+LABEL org.opencontainers.image.authors="Amir Arad"
+LABEL org.opencontainers.image.url="https://github.com/amir-arad/mcp-ragdocs"
+LABEL org.opencontainers.image.source="https://github.com/amir-arad/mcp-ragdocs"
+
 # Set working directory
 WORKDIR /app
 
