@@ -33,3 +33,4 @@ yarn-error.log*
 coverage/
 
 qdrant_data
+ollama_data
