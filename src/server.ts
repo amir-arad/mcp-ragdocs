@@ -16,6 +16,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const rootDir = join(__dirname, "..");
 
+// Check if public directory exists in expected locations and use the one that exists
+const possiblePublicPaths = [
+  join(rootDir, "src/public"),
+  join(rootDir, "build/public"),
+  join(__dirname, "public"),
+  join(dirname(__dirname), "public"),
+];
+
+const publicPath = possiblePublicPaths.find(path => fs.existsSync(path)) || possiblePublicPaths[0];
+console.log(`Using public files from: ${publicPath}`);
+
+
 interface ApiError extends Error {
   status?: number;
 }
@@ -46,25 +58,6 @@ interface QueueItem {
   url: string;
   status: string;
   timestamp: string;
-}
-
-import net from 'net';
-
-function getAvailablePort(startPort: number): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.listen(startPort, () => {
-      const { port } = server.address() as net.AddressInfo;
-      server.close(() => resolve(port));
-    });
-    server.on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
-        resolve(getAvailablePort(startPort + 1));
-      } else {
-        reject(err);
-      }
-    });
-  });
 }
 
 export class WebInterface {
@@ -117,9 +110,13 @@ export class WebInterface {
   private setupMiddleware() {
     this.app.use(cors());
     this.app.use(express.json());
-    this.app.use(express.static(join(rootDir, "src/public")));
+    // Use the detected public path
+    this.app.use(express.static(publicPath));
     this.app.get("/", (req: Request, res: Response) => {
-      res.sendFile(join(rootDir, "src/public/index.html"));
+      const indexPath = join(publicPath, "index.html");
+      console.log(`Serving index.html from: ${indexPath}`);
+      if (fs.existsSync(indexPath)) res.sendFile(indexPath);
+      else res.status(404).send("Web interface files not found. Check container paths.");
     });
   }
 
@@ -492,7 +489,7 @@ export class WebInterface {
   }
 
   async start() {
-    const port = await getAvailablePort(3030);
+    const port = 3030;
     this.server = this.app.listen(port, () => {
       console.log(`Web interface running at http://localhost:${port}`);
     });

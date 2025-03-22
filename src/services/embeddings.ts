@@ -1,4 +1,4 @@
-import ollama from 'ollama';
+import { Ollama } from 'ollama';
 import OpenAI from 'openai';
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 
@@ -9,15 +9,17 @@ export interface EmbeddingProvider {
 
 export class OllamaProvider implements EmbeddingProvider {
   private model: string;
+  private ollama: Ollama;
 
-  constructor(model: string = 'nomic-embed-text') {
+  constructor(host: string, model: string = 'nomic-embed-text') {
     this.model = model;
+    this.ollama = new Ollama({ host });
   }
 
   async generateEmbeddings(text: string): Promise<number[]> {
     try {
-      console.error('Generating Ollama embeddings for text:', text.substring(0, 50) + '...');
-      const response = await ollama.embeddings({
+      console.error(`Generating Ollama embeddings using ${this.model} for text:`, text.length > 50 ? text.substring(0, 50) + '...' : text);
+      const response = await this.ollama.embeddings({
         model: this.model,
         prompt: text
       });
@@ -101,6 +103,7 @@ export class EmbeddingService {
     provider: 'ollama' | 'openai';
     apiKey?: string;
     model?: string;
+    ollamaBaseUrl?: string;
     fallbackProvider?: 'ollama' | 'openai';
     fallbackApiKey?: string;
     fallbackModel?: string;
@@ -108,6 +111,7 @@ export class EmbeddingService {
     const primaryProvider = EmbeddingService.createProvider(
       config.provider,
       config.apiKey,
+      config.ollamaBaseUrl,
       config.model
     );
 
@@ -116,6 +120,7 @@ export class EmbeddingService {
       fallbackProvider = EmbeddingService.createProvider(
         config.fallbackProvider,
         config.fallbackApiKey,
+        config.ollamaBaseUrl,
         config.fallbackModel
       );
     }
@@ -126,11 +131,12 @@ export class EmbeddingService {
   private static createProvider(
     provider: 'ollama' | 'openai',
     apiKey?: string,
+    ollamaBaseUrl?: string,
     model?: string
   ): EmbeddingProvider {
     switch (provider) {
       case 'ollama':
-        return new OllamaProvider(model);
+        return new OllamaProvider(ollamaBaseUrl!, model);
       case 'openai':
         if (!apiKey) {
           throw new McpError(

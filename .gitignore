@@ -32,7 +32,4 @@ yarn-error.log*
 # Test coverage
 coverage/
 
-# Local documentation files
-INTERNAL.TXT
-queue.txt
-MCPguide.txt
+qdrant_data

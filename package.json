@@ -41,22 +41,20 @@
   "homepage": "https://github.com/rahulretnan/mcp-ragdocs#readme",
   "dependencies": {
     "@azure/openai": "2.0.0",
-    "@modelcontextprotocol/sdk": "1.0.3",
+    "@modelcontextprotocol/sdk": "1.7.0",
     "@qdrant/js-client-rest": "1.12.0",
-    "axios": "1.7.9",
     "cheerio": "1.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "net": "^1.0.2",
-    "ollama": "^0.5.11",
-    "openai": "4.76.2",
-    "playwright": "1.49.1"
+    "ollama": "^0.5.14",
+    "openai": "4.89.0",
+    "playwright": "1.51.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^20.17.10",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   },
   "publishConfig": {

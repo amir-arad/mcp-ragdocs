@@ -11,6 +11,7 @@ const FALLBACK_PROVIDER = process.env.FALLBACK_PROVIDER;
 const FALLBACK_MODEL = process.env.FALLBACK_MODEL;
 const QDRANT_URL = process.env.QDRANT_URL || 'http://localhost:6333';
 const QDRANT_API_KEY = process.env.QDRANT_API_KEY;
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 
 if (!QDRANT_URL) {
   throw new Error(
@@ -25,6 +26,11 @@ if ((EMBEDDING_PROVIDER === 'openai' || FALLBACK_PROVIDER === 'openai') && !OPEN
 }
 
 if (EMBEDDING_PROVIDER === 'ollama') {
+  if (!OLLAMA_BASE_URL) {
+    throw new Error(
+      "OLLAMA_BASE_URL environment variable is required when using Ollama as primary provider"
+    );
+  }
   console.warn('Using Ollama as primary provider. Make sure Ollama is running locally.');
 }
 
@@ -47,6 +53,7 @@ export class ApiClient {
       apiKey: EMBEDDING_PROVIDER === 'openai' ? OPENAI_API_KEY : undefined,
       model: EMBEDDING_MODEL,
       fallbackProvider: FALLBACK_PROVIDER as 'ollama' | 'openai' | undefined,
+      ollamaBaseUrl: OLLAMA_BASE_URL,
       fallbackApiKey: FALLBACK_PROVIDER === 'openai' ? OPENAI_API_KEY : undefined,
       fallbackModel: FALLBACK_MODEL
     });
