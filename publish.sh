@@ -56,7 +56,9 @@ docker push amirarad/mcp-ragdocs:latest
 # Create a GitHub release using the GitHub CLI if available
 if command -v gh &> /dev/null; then
   echo "Creating GitHub release..."
+  # Explicitly specify the repository
   gh release create "v$VERSION" \
+    --repo "amir-arad/mcp-ragdocs" \
     --title "v$VERSION" \
     --notes "Release v$VERSION of MCP RAG Documentation Server with HTTP/SSE transport" \
     --target main
