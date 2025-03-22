@@ -45,6 +45,13 @@ else
     # First set the package.json version to the base version without actually creating a tag
     # This ensures we're bumping from the base version without dev tags
     npm --no-git-tag-version version "$BASE_VERSION" >/dev/null 2>&1
+
+    # Commit the base version change
+    if [[ -n $(git status --porcelain) ]]; then
+      echo "Committing base version change..."
+      git add .
+      git commit -m "Set base version to $BASE_VERSION before bumping"
+    fi
     
     # Then bump the version
     npm version "$VERSION_TYPE"
