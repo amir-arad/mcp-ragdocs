@@ -246,6 +246,25 @@ The following features are planned for future releases:
 - **Crawler MCP Interface**: Expose the crawler as a separate MCP service
 - **Pipeline Processing**: Allow chaining multiple MCP services for advanced workflows
 
+## Development and Publishing
+
+### Publishing Docker Images
+
+This project includes a script to build and publish Docker images to Docker Hub. The script handles version management, Git tagging, and Docker image building and pushing.
+
+To publish Docker images:
+
+```bash
+# Default: Create a dev version with timestamp (e.g., 1.0.0-dev.20250322153904)
+npm run version
+
+# Bump patch version (e.g., 1.0.0 -> 1.0.1)
+npm run version patch
+
+# Other options: minor, major
+npm run version minor
+```
+
 ## Acknowledgments
 
 This project is a fork with the following attributions:

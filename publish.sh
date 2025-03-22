@@ -3,6 +3,9 @@
 # Exit on error
 set -e
 
+# Default version type is "dev"
+VERSION_TYPE=${1:-dev}
+
 # Get version from package.json
 VERSION=$(node -e "console.log(require('./package.json').version)")
 
@@ -13,23 +16,37 @@ if [[ -n $(git status --porcelain) ]]; then
   git commit -m "Pre-release commit"
 fi
 
-# Check if tag already exists
-if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-  echo "Tag v$VERSION already exists. Using dev tag..."
-  # Strip any existing dev tags first
-  BASE_VERSION=$(echo "$VERSION" | sed 's/-dev\.[0-9]\{14\}$//')
-  DEV_VERSION="${BASE_VERSION}-dev.$(date +%Y%m%d%H%M%S)"
-  echo "Using version: $DEV_VERSION"
-  
-  # Update package.json with the dev version and create git tag
-  npm version "$DEV_VERSION"
-  
-  # Get the updated version
-  VERSION="$DEV_VERSION"
+# Handle version based on VERSION_TYPE
+if [[ "$VERSION_TYPE" == "dev" ]]; then
+  # Check if tag already exists
+  if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+    echo "Tag v$VERSION already exists. Using dev tag..."
+    # Strip any existing dev tags first
+    BASE_VERSION=$(echo "$VERSION" | sed 's/-dev\.[0-9]\{14\}$//')
+    DEV_VERSION="${BASE_VERSION}-dev.$(date +%Y%m%d%H%M%S)"
+    echo "Using version: $DEV_VERSION"
+    
+    # Update package.json with the dev version and create git tag
+    npm version "$DEV_VERSION"
+    
+    # Get the updated version
+    VERSION="$DEV_VERSION"
+  else
+    # Use npm version to update version and create git tag
+    echo "Creating release v$VERSION..."
+    npm version "$VERSION" --allow-same-version
+  fi
 else
-  # Use npm version to update version and create git tag
-  echo "Creating release v$VERSION..."
-  npm version "$VERSION" --allow-same-version
+  # Valid version types: patch, minor, major
+  if [[ "$VERSION_TYPE" == "patch" || "$VERSION_TYPE" == "minor" || "$VERSION_TYPE" == "major" ]]; then
+    echo "Bumping $VERSION_TYPE version..."
+    npm version "$VERSION_TYPE"
+    # Get the updated version after bump
+    VERSION=$(node -e "console.log(require('./package.json').version)")
+  else
+    echo "Error: Invalid version type. Use 'dev', 'patch', 'minor', or 'major'."
+    exit 1
+  fi
 fi
 
 # Push changes and tags to GitHub

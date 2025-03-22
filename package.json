@@ -16,7 +16,7 @@
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "inspector": "npx @modelcontextprotocol/inspector http://localhost:3031",
     "start": "node build/index.js",
-    "publish:docker": "bash publish.sh"
+    "version": "bash publish.sh"
   },
   "keywords": [
     "mcp",
