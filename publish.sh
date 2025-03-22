@@ -9,6 +9,9 @@ VERSION_TYPE=${1:-dev}
 # Get version from package.json
 VERSION=$(node -e "console.log(require('./package.json').version)")
 
+# Strip any existing dev tags first to get the base version
+BASE_VERSION=$(echo "$VERSION" | sed 's/-dev\.[0-9]\{14\}$//')
+
 # Commit any pending changes first
 if [[ -n $(git status --porcelain) ]]; then
   echo "Committing pending changes..."
@@ -21,8 +24,6 @@ if [[ "$VERSION_TYPE" == "dev" ]]; then
   # Check if tag already exists
   if git rev-parse "v$VERSION" >/dev/null 2>&1; then
     echo "Tag v$VERSION already exists. Using dev tag..."
-    # Strip any existing dev tags first
-    BASE_VERSION=$(echo "$VERSION" | sed 's/-dev\.[0-9]\{14\}$//')
     DEV_VERSION="${BASE_VERSION}-dev.$(date +%Y%m%d%H%M%S)"
     echo "Using version: $DEV_VERSION"
     
@@ -39,8 +40,15 @@ if [[ "$VERSION_TYPE" == "dev" ]]; then
 else
   # Valid version types: patch, minor, major
   if [[ "$VERSION_TYPE" == "patch" || "$VERSION_TYPE" == "minor" || "$VERSION_TYPE" == "major" ]]; then
-    echo "Bumping $VERSION_TYPE version..."
+    echo "Bumping $VERSION_TYPE version from $BASE_VERSION..."
+    
+    # First set the package.json version to the base version without actually creating a tag
+    # This ensures we're bumping from the base version without dev tags
+    npm --no-git-tag-version version "$BASE_VERSION" >/dev/null 2>&1
+    
+    # Then bump the version
     npm version "$VERSION_TYPE"
+    
     # Get the updated version after bump
     VERSION=$(node -e "console.log(require('./package.json').version)")
   else
