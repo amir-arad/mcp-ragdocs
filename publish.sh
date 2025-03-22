@@ -53,8 +53,19 @@ else
       git commit -m "Set base version to $BASE_VERSION before bumping"
     fi
     
-    # Then bump the version
-    npm version "$VERSION_TYPE"
+    # Check if the tag for the bumped version already exists
+    NEXT_VERSION=$(npm --no-git-tag-version version "$VERSION_TYPE" | sed 's/^v//')
+    git reset --hard HEAD  # Undo the version change in package.json
+    
+    if git rev-parse "v$NEXT_VERSION" >/dev/null 2>&1; then
+      echo "Tag v$NEXT_VERSION already exists. Cannot bump version."
+      echo "Please manually set a different version or delete the existing tag."
+      exit 1
+    else
+      echo "Bumping to version $NEXT_VERSION..."
+      # Now actually bump the version and create the tag
+      npm version "$VERSION_TYPE"
+    fi
     
     # Get the updated version after bump
     VERSION=$(node -e "console.log(require('./package.json').version)")
