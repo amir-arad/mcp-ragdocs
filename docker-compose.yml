@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   qdrant:
     image: qdrant/qdrant:latest
@@ -10,6 +8,14 @@ services:
     environment:
       - QDRANT__SERVICE__HTTP_PORT=6333
 
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama_data:/root/.ollama
+    restart: unless-stopped
+
   mcp-ragdocs:
     build: .
     ports:
@@ -17,10 +23,9 @@ services:
       - "3031:3031"
     depends_on:
       - qdrant
+      - ollama
     environment:
       - QDRANT_URL=http://qdrant:6333
       - EMBEDDING_PROVIDER=ollama
       - EMBEDDING_MODEL=nomic-embed-text
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - OLLAMA_BASE_URL=http://ollama:11434

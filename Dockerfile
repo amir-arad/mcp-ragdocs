@@ -111,4 +111,4 @@ EXPOSE 3030
 EXPOSE 3031
 
 # Start the application with proper error handling to prevent early exit
-CMD ["/bin/bash", "-c", "/app/wait-for-it.sh qdrant:6333 -t 60 -- /app/diagnostic.sh && node build/index.js"]
+CMD ["/bin/bash", "-c", "/app/wait-for-it.sh qdrant:6333 -t 60 -- /app/wait-for-it.sh ollama:11434 -t 60 -- /app/diagnostic.sh && node build/index.js"]

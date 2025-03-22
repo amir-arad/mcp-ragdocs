@@ -43,6 +43,13 @@ git clone git@github.com:amir-arad/mcp-ragdocs.git
 docker-compose up --build
 ```
 
+After starting the services, you'll need to pull the embedding model:
+
+```bash
+# Pull the embedding model
+docker-compose exec ollama ollama pull nomic-embed-text
+```
+
 ### Access Points
 
 - **Web Interface**: `http://localhost:3030`
@@ -75,16 +82,16 @@ Add this to your `cline_mcp_settings.json`:
 
 The service can be configured with these environment variables:
 
-| Variable             | Description                      | Default                             |
-| -------------------- | -------------------------------- | ----------------------------------- |
-| `EMBEDDING_PROVIDER` | Primary embedding provider       | `ollama`                            |
-| `EMBEDDING_MODEL`    | Model to use for embeddings      | `nomic-embed-text`                  |
-| `OLLAMA_BASE_URL`    | URL for Ollama service           | `http://host.docker.internal:11434` |
-| `QDRANT_URL`         | URL for Qdrant vector database   | `http://qdrant:6333`                |
-| `PORT`               | Port for web interface           | `3030`                              |
-| `OPENAI_API_KEY`     | OpenAI API key (if using OpenAI) | -                                   |
-| `FALLBACK_PROVIDER`  | Backup embedding provider        | -                                   |
-| `FALLBACK_MODEL`     | Model for fallback provider      | -                                   |
+| Variable             | Description                      | Default               |
+| -------------------- | -------------------------------- | --------------------- |
+| `EMBEDDING_PROVIDER` | Primary embedding provider       | `ollama`              |
+| `EMBEDDING_MODEL`    | Model to use for embeddings      | `nomic-embed-text`    |
+| `OLLAMA_BASE_URL`    | URL for Ollama service           | `http://ollama:11434` |
+| `QDRANT_URL`         | URL for Qdrant vector database   | `http://qdrant:6333`  |
+| `PORT`               | Port for web interface           | `3030`                |
+| `OPENAI_API_KEY`     | OpenAI API key (if using OpenAI) | -                     |
+| `FALLBACK_PROVIDER`  | Backup embedding provider        | -                     |
+| `FALLBACK_MODEL`     | Model for fallback provider      | -                     |
 
 ## Available Tools
 
@@ -108,8 +115,9 @@ graph TD
     A[User] -->|docker-compose up -d| B[Docker Environment]
     B --> |start|C[Qdrant Container]
     B --> |start|D[MCP-RAGDocs Container]
+    B --> |start|E[Ollama Container]
     D --> C[Qdrant Container]
-    D -->|http host.docker.internal:11434| E[Ollama on Host]
+    D -->|http ollama:11434| E
     F[Cline/Claude] -->|HTTP/SSE Transport| D
     A -->|http localhost:3030| G[Web Interface]
     G --- D
@@ -144,7 +152,7 @@ docker-compose exec . /app/diagnostic.sh
 
 If embeddings fail:
 
-1. Ensure Ollama is running on your host machine
+1. Ensure the Ollama model is pulled (`docker-compose exec ollama ollama pull nomic-embed-text`)
 2. Configure OpenAI as a fallback provider if needed
 
 ## Acknowledgments
