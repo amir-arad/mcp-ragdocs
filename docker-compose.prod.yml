@@ -9,10 +9,7 @@ services:
       - QDRANT__SERVICE__HTTP_PORT=6333
 
   ollama:
-    build:
-      context: .
-      dockerfile: Dockerfile.ollama
-      # This builds a custom Ollama image with nomic-embed-text model pre-installed
+    image: amirarad/mcp-ragdocs-ollama:latest
     ports:
       - "11434:11434"
     volumes:
@@ -20,12 +17,7 @@ services:
     restart: unless-stopped
 
   mcp-ragdocs:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      # Enable BuildKit features
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+    image: amirarad/mcp-ragdocs:latest
     ports:
       - "3030:3030"
       - "3031:3031"

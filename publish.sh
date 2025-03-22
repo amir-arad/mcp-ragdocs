@@ -35,7 +35,11 @@ echo "Pushing changes and tags to GitHub..."
 git push origin main
 git push origin "v$VERSION"
 
-# Build the Docker image
+# Login to Docker Hub (will prompt for credentials if not already logged in)
+echo "Logging in to Docker Hub..."
+docker login
+
+# Build the main application Docker image
 echo "Building Docker image amirarad/mcp-ragdocs:$VERSION..."
 # Add labels for GitHub repository linking
 docker build \
@@ -47,21 +51,38 @@ docker build \
   --label "org.opencontainers.image.description=A containerized MCP server implementation providing tools for retrieving and processing documentation through vector search" \
   -t amirarad/mcp-ragdocs:$VERSION .
 
-# Tag as latest
-echo "Tagging as latest..."
+# Tag main application as latest
+echo "Tagging main application as latest..."
 docker tag amirarad/mcp-ragdocs:$VERSION amirarad/mcp-ragdocs:latest
 
-# Login to Docker Hub (will prompt for credentials if not already logged in)
-echo "Logging in to Docker Hub..."
-docker login
+# Build the custom Ollama Docker image
+echo "Building Docker image amirarad/mcp-ragdocs-ollama:$VERSION..."
+# Add labels for GitHub repository linking
+docker build \
+  --label "org.opencontainers.image.source=https://github.com/amir-arad/mcp-ragdocs" \
+  --label "org.opencontainers.image.url=https://github.com/amir-arad/mcp-ragdocs" \
+  --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+  --label "org.opencontainers.image.version=$VERSION" \
+  --label "org.opencontainers.image.title=MCP RAG Documentation Server Ollama" \
+  --label "org.opencontainers.image.description=Custom Ollama image with pre-installed nomic-embed-text model for MCP RAG Documentation Server" \
+  -t amirarad/mcp-ragdocs-ollama:$VERSION \
+  -f Dockerfile.ollama .
 
-# Push the versioned image
+# Tag Ollama image as latest
+echo "Tagging Ollama image as latest..."
+docker tag amirarad/mcp-ragdocs-ollama:$VERSION amirarad/mcp-ragdocs-ollama:latest
+
+# Push the versioned images
 echo "Pushing amirarad/mcp-ragdocs:$VERSION..."
 docker push amirarad/mcp-ragdocs:$VERSION
+echo "Pushing amirarad/mcp-ragdocs-ollama:$VERSION..."
+docker push amirarad/mcp-ragdocs-ollama:$VERSION
 
-# Push the latest tag
+# Push the latest tags
 echo "Pushing amirarad/mcp-ragdocs:latest..."
 docker push amirarad/mcp-ragdocs:latest
+echo "Pushing amirarad/mcp-ragdocs-ollama:latest..."
+docker push amirarad/mcp-ragdocs-ollama:latest
 
 # Create a GitHub release using the GitHub CLI if available
 if command -v gh &> /dev/null; then
@@ -77,4 +98,4 @@ else
   echo "https://github.com/amir-arad/mcp-ragdocs/releases/new?tag=v$VERSION"
 fi
 
-echo "Successfully published amirarad/mcp-ragdocs:$VERSION and amirarad/mcp-ragdocs:latest"
+echo "Successfully published amirarad/mcp-ragdocs:$VERSION, amirarad/mcp-ragdocs:latest, amirarad/mcp-ragdocs-ollama:$VERSION, and amirarad/mcp-ragdocs-ollama:latest"

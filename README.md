@@ -43,11 +43,16 @@ git clone git@github.com:amir-arad/mcp-ragdocs.git
 docker-compose up --build
 ```
 
-After starting the services, you'll need to pull the embedding model:
+### Using Pre-built Images
+
+For production deployments, you can use the pre-built Docker images:
 
 ```bash
-# Pull the embedding model
-docker-compose exec ollama ollama pull nomic-embed-text
+# Clone the repository
+git clone git@github.com:amir-arad/mcp-ragdocs.git
+
+# Start the services using pre-built images
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### Access Points
@@ -115,7 +120,7 @@ graph TD
     A[User] -->|docker-compose up -d| B[Docker Environment]
     B --> |start|C[Qdrant Container]
     B --> |start|D[MCP-RAGDocs Container]
-    B --> |start|E[Ollama Container]
+    B --> |start|E[Custom Ollama Container with pre-installed model]
     D --> C[Qdrant Container]
     D -->|http ollama:11434| E
     F[Cline/Claude] -->|HTTP/SSE Transport| D
@@ -152,7 +157,7 @@ docker-compose exec . /app/diagnostic.sh
 
 If embeddings fail:
 
-1. Ensure the Ollama model is pulled (`docker-compose exec ollama ollama pull nomic-embed-text`)
+1. Check the Ollama container logs to ensure the model was properly installed during startup
 2. Configure OpenAI as a fallback provider if needed
 
 ## Acknowledgments
@@ -162,5 +167,25 @@ This project is a fork with the following attributions:
 - Original [mcp-ragdocs](https://github.com/qpd-v/mcp-ragdocs) by qpd-v
 - Enhanced version by Rahul Retnan ([@rahulretnan](https://github.com/rahulretnan/mcp-ragdocs))
 - HTTP/SSE transport implementation as documented in this repository
+
+## Build Optimizations
+
+This project includes several optimizations to improve build and startup times:
+
+1. **Custom Ollama Image**: Uses a custom Ollama Docker image with the `nomic-embed-text` model pre-installed, eliminating the need to pull the model at runtime.
+2. **Microsoft Playwright Image**: Uses the official Microsoft Playwright Docker image as the base for the main application, significantly reducing build time by eliminating the need to install Playwright and its dependencies.
+3. **BuildKit Optimizations**: Enables Docker BuildKit features for faster builds.
+4. **Optimized Dependencies**: Only installs essential utilities needed for diagnostics.
+5. **Improved Caching**: Uses proper layer ordering and .dockerignore to optimize caching.
+
+## Publishing
+
+To publish new versions of the Docker images:
+
+```bash
+./publish.sh
+```
+
+This script builds and pushes both the main application image and the custom Ollama image to Docker Hub.
 
 Special thanks to all the original developers and contributors who made this work possible.
