@@ -20,7 +20,7 @@ flowchart LR
 - **Vector Search**: Find relevant documentation chunks using semantic search
 - **Multiple Sources**: Support for various documentation formats and sources
 - **Web Interface**: Browser-based interface for managing documentation
-- **Embeddings**: Support for local (Ollama) and cloud-based (OpenAI) embeddings
+- **Embeddings**: Support for Ollama and cloud-based (OpenAI) embeddings
 
 ### HTTP/SSE Transport Enhancements
 
@@ -120,10 +120,10 @@ graph TD
     A[User] -->|docker-compose up -d| B[Docker Environment]
     B --> |start|C[Qdrant Container]
     B --> |start|D[MCP-RAGDocs Container]
-    B --> |start|E[Custom Ollama Container with pre-installed model]
+    B --> |start|E[Custom Ollama Container]
     D --> C[Qdrant Container]
     D -->|http ollama:11434| E
-    F[Cline/Claude] -->|HTTP/SSE Transport| D
+    F[Claude] -->|HTTP/SSE Transport| D
     A -->|http localhost:3030| G[Web Interface]
     G --- D
 ```
@@ -155,10 +155,98 @@ docker-compose exec . /app/diagnostic.sh
 
 ### Embedding Problems
 
-If embeddings fail:
+If embeddings fail, check the Ollama container logs to ensure the model was properly installed during startup.
 
-1. Check the Ollama container logs to ensure the model was properly installed during startup
-2. Configure OpenAI as a fallback provider if needed
+## Docker Images
+
+This project provides two Docker images:
+
+### 1. Main Application Image
+
+The main application image contains the MCP RAG Documentation Server with HTTP/SSE transport capabilities.
+
+- **Docker Hub**: [amirarad/mcp-ragdocs](https://hub.docker.com/r/amirarad/mcp-ragdocs)
+- **Tags**: `latest`, version tags (e.g., `1.0.0`)
+- **Base Image**: Microsoft Playwright Docker image
+- **Features**: Vector search, documentation processing, web interface
+
+### 2. Custom Ollama Image
+
+A customized Ollama image with the `nomic-embed-text` model pre-installed for embedding generation.
+
+- **Docker Hub**: [amirarad/mcp-ragdocs-ollama](https://hub.docker.com/r/amirarad/mcp-ragdocs-ollama)
+- **Tags**: `latest`, version tags (e.g., `1.0.0`)
+- **Base Image**: Official Ollama Docker image
+- **Features**: Pre-installed `nomic-embed-text` model for embeddings
+
+## Alternative Configurations
+
+### Using Local Ollama Installation
+
+If you prefer to use a local Ollama installation, modify the `docker-compose.prod.yml` file:
+
+```yaml
+services:
+  # Remove or comment out the ollama service
+  # ollama:
+  #   image: amirarad/mcp-ragdocs-ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ./ollama_data:/root/.ollama
+  #   restart: unless-stopped
+
+  mcp-ragdocs:
+    # ... other settings remain the same
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - EMBEDDING_PROVIDER=ollama
+      - EMBEDDING_MODEL=nomic-embed-text
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+```
+
+### Using OpenAI for Embeddings
+
+To use OpenAI for embeddings instead of Ollama:
+
+```yaml
+services:
+  # Remove or comment out the ollama service
+  # ollama:
+  #   image: amirarad/mcp-ragdocs-ollama:latest
+  #   ...
+
+  mcp-ragdocs:
+    # ... other settings remain the same
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - EMBEDDING_PROVIDER=openai
+      - EMBEDDING_MODEL=text-embedding-ada-002
+      - OPENAI_API_KEY=your_openai_api_key_here
+```
+
+## Future Features
+
+The following features are planned for future releases:
+
+### Content Management
+
+- **Direct Content Input**: Add raw text, HTML, or Markdown entries without crawling
+- **Content Organization**: Better categorization and tagging of documentation
+
+### Enhanced Crawling
+
+- **Deduplication**: Intelligent deduplication of content across sources
+- **Crawling Depth Control**: Configure the depth of web crawling
+- **Content Filtering**: Filter content by type, keywords, or relevance
+
+### Microservices Architecture
+
+- **Separate Crawler Service**: Extract the crawler into its own Docker image
+- **Crawler MCP Interface**: Expose the crawler as a separate MCP service
+- **Pipeline Processing**: Allow chaining multiple MCP services for advanced workflows
 
 ## Acknowledgments
 
@@ -167,25 +255,5 @@ This project is a fork with the following attributions:
 - Original [mcp-ragdocs](https://github.com/qpd-v/mcp-ragdocs) by qpd-v
 - Enhanced version by Rahul Retnan ([@rahulretnan](https://github.com/rahulretnan/mcp-ragdocs))
 - HTTP/SSE transport implementation as documented in this repository
-
-## Build Optimizations
-
-This project includes several optimizations to improve build and startup times:
-
-1. **Custom Ollama Image**: Uses a custom Ollama Docker image with the `nomic-embed-text` model pre-installed, eliminating the need to pull the model at runtime.
-2. **Microsoft Playwright Image**: Uses the official Microsoft Playwright Docker image as the base for the main application, significantly reducing build time by eliminating the need to install Playwright and its dependencies.
-3. **BuildKit Optimizations**: Enables Docker BuildKit features for faster builds.
-4. **Optimized Dependencies**: Only installs essential utilities needed for diagnostics.
-5. **Improved Caching**: Uses proper layer ordering and .dockerignore to optimize caching.
-
-## Publishing
-
-To publish new versions of the Docker images:
-
-```bash
-./publish.sh
-```
-
-This script builds and pushes both the main application image and the custom Ollama image to Docker Hub.
 
 Special thanks to all the original developers and contributors who made this work possible.
