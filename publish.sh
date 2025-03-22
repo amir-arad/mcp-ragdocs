@@ -6,19 +6,29 @@ set -e
 # Get version from package.json
 VERSION=$(node -e "console.log(require('./package.json').version)")
 
-# Commit changes if there are any
-echo "Checking for uncommitted changes..."
+# Commit any pending changes first
 if [[ -n $(git status --porcelain) ]]; then
-  echo "Committing changes..."
+  echo "Committing pending changes..."
   git add .
-  git commit -m "Release v$VERSION"
-else
-  echo "No changes to commit."
+  git commit -m "Pre-release commit"
 fi
 
-# Create a git tag for this version
-echo "Creating git tag v$VERSION..."
-git tag -a "v$VERSION" -m "Release v$VERSION"
+# Check if tag already exists
+if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+  echo "Tag v$VERSION already exists. Using dev tag..."
+  DEV_VERSION="${VERSION}-dev.$(date +%Y%m%d%H%M%S)"
+  echo "Using version: $DEV_VERSION"
+  
+  # Update package.json with the dev version and create git tag
+  npm version "$DEV_VERSION"
+  
+  # Get the updated version
+  VERSION="$DEV_VERSION"
+else
+  # Use npm version to update version and create git tag
+  echo "Creating release v$VERSION..."
+  npm version "$VERSION" --allow-same-version
+fi
 
 # Push changes and tags to GitHub
 echo "Pushing changes and tags to GitHub..."
@@ -68,4 +78,3 @@ else
 fi
 
 echo "Successfully published amirarad/mcp-ragdocs:$VERSION and amirarad/mcp-ragdocs:latest"
-echo "Release v$VERSION created on GitHub"
