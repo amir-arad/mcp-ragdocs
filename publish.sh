@@ -16,7 +16,9 @@ fi
 # Check if tag already exists
 if git rev-parse "v$VERSION" >/dev/null 2>&1; then
   echo "Tag v$VERSION already exists. Using dev tag..."
-  DEV_VERSION="${VERSION}-dev.$(date +%Y%m%d%H%M%S)"
+  # Strip any existing dev tags first
+  BASE_VERSION=$(echo "$VERSION" | sed 's/-dev\.[0-9]\{14\}$//')
+  DEV_VERSION="${BASE_VERSION}-dev.$(date +%Y%m%d%H%M%S)"
   echo "Using version: $DEV_VERSION"
   
   # Update package.json with the dev version and create git tag
