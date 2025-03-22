@@ -12,8 +12,6 @@ services:
     image: amirarad/mcp-ragdocs-ollama:latest
     ports:
       - "11434:11434"
-    volumes:
-      - ./ollama_data:/root/.ollama
     restart: unless-stopped
 
   mcp-ragdocs:

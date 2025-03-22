@@ -123,7 +123,7 @@ graph TD
     B --> |start|E[Custom Ollama Container]
     D --> C[Qdrant Container]
     D -->|http ollama:11434| E
-    F[Claude] -->|HTTP/SSE Transport| D
+    F[AI Assistant] -->|HTTP/SSE Transport| D
     A -->|http localhost:3030| G[Web Interface]
     G --- D
 ```
@@ -177,7 +177,7 @@ A customized Ollama image with the `nomic-embed-text` model pre-installed for em
 - **Docker Hub**: [amirarad/mcp-ragdocs-ollama](https://hub.docker.com/r/amirarad/mcp-ragdocs-ollama)
 - **Tags**: `latest`, version tags (e.g., `1.0.0`)
 - **Base Image**: Official Ollama Docker image
-- **Features**: Pre-installed `nomic-embed-text` model for embeddings
+- **Features**: Pre-installed `nomic-embed-text` model for immediate use
 
 ## Alternative Configurations
 
@@ -192,8 +192,6 @@ services:
   #   image: amirarad/mcp-ragdocs-ollama:latest
   #   ports:
   #     - "11434:11434"
-  #   volumes:
-  #     - ./ollama_data:/root/.ollama
   #   restart: unless-stopped
 
   mcp-ragdocs:

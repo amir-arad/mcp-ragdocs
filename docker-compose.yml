@@ -15,10 +15,7 @@ services:
       # This builds a custom Ollama image with nomic-embed-text model pre-installed
     ports:
       - "11434:11434"
-    volumes:
-      - ./ollama_data:/root/.ollama
     restart: unless-stopped
-
   mcp-ragdocs:
     build:
       context: .
