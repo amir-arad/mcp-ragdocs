@@ -256,13 +256,13 @@ To publish Docker images:
 
 ```bash
 # Default: Create a dev version with timestamp (e.g., 1.0.0-dev.20250322153904)
-npm run version
+npm run publish
 
 # Bump patch version (e.g., 1.0.0 -> 1.0.1)
-npm run version patch
+npm run publish patch
 
 # Other options: minor, major
-npm run version minor
+npm run publish minor
 ```
 
 ## Acknowledgments
