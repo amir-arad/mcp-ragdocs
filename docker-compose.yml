@@ -17,7 +17,12 @@ services:
     restart: unless-stopped
 
   mcp-ragdocs:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Enable BuildKit features
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     ports:
       - "3030:3030"
       - "3031:3031"

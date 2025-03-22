@@ -1,97 +1,34 @@
-# Stage 1: Build the TypeScript project
-FROM node:20-bullseye AS builder
+# Use Playwright's pre-built image with browsers already installed
+FROM mcr.microsoft.com/playwright:v1.40.0-focal
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies for Playwright
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libglib2.0-0 \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libfontconfig1 \
-    libxss1 \
-    xvfb \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy package files and install dependencies
 COPY package*.json ./
-
-# Modify the package.json to temporarily disable the prepare script to avoid circular dependency
-RUN sed -i 's/"prepare": "npm run build",/"prepare": "echo Skipping prepare script during Docker build",/g' package.json
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
-
-# Build TypeScript code manually
 RUN npm run build
+RUN mkdir -p /app/build/public
+RUN cp -r /app/src/public/* /app/build/public/
 
-# Stage 2: Production image
-FROM node:20-bullseye
+# Install only essential utilities needed for diagnostics
+# curl - for API testing and model pulling
+# iputils-ping - for network diagnostics
+# dnsutils - for DNS resolution checks
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl iputils-ping dnsutils \
+    && rm -rf /var/lib/apt/lists/*
 
-# Metadata labels
+# Add metadata labels
 LABEL org.opencontainers.image.title="MCP RAG Documentation Server"
 LABEL org.opencontainers.image.description="A containerized MCP server implementation with HTTP/SSE transport for retrieving and processing documentation through vector search"
 LABEL org.opencontainers.image.authors="Amir Arad"
 LABEL org.opencontainers.image.url="https://github.com/amir-arad/mcp-ragdocs"
 LABEL org.opencontainers.image.source="https://github.com/amir-arad/mcp-ragdocs"
-
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies for Playwright and additional utilities for diagnostics
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libglib2.0-0 \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    libpangocairo-1.0-0 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libfontconfig1 \
-    libxss1 \
-    xvfb iputils-ping curl wget netcat dnsutils \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy built files from builder stage
-COPY --from=builder /app/build /app/build
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/package.json /app/package.json
-
-# Copy public files to both potential locations
-COPY --from=builder /app/src/public /app/build/public
-COPY --from=builder /app/src/public /app/src/public
-
-# Install Playwright browser
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
-RUN npx playwright install chromium
-RUN npx playwright install-deps chromium
 
 # Set environment variables from docker-compose.yml
 ENV NODE_OPTIONS="--experimental-fetch"
@@ -100,6 +37,7 @@ ENV EMBEDDING_PROVIDER=ollama
 ENV EMBEDDING_MODEL=nomic-embed-text
 ENV QDRANT_URL=http://qdrant:6333
 ENV PORT=3030
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Copy helper scripts
 COPY wait-for-it.sh /app/wait-for-it.sh
